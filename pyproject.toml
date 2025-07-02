@@ -6,28 +6,30 @@ build-backend = "flit_core.buildapi"
 name = "fast-flights"
 version = "2.2"
 description = "The fast, robust, strongly-typed Google Flights scraper (API) implemented in Python."
-keywords = ["flights", "google", "google-flights", "scraper", "protobuf", "travel", "trip", "passengers", "airport"]
-authors = [
-  { name = "AWeirdDev", email = "aweirdscratcher@gmail.com" },
+keywords = [
+  "flights",
+  "google",
+  "google-flights",
+  "scraper",
+  "protobuf",
+  "travel",
+  "trip",
+  "passengers",
+  "airport",
 ]
+authors = [{ name = "AWeirdDev", email = "aweirdscratcher@gmail.com" }]
 license = { file = "LICENSE" }
 readme = "README.md"
 classifiers = [
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
 ]
 requires-python = ">=3.8"
-dependencies = [
-  "primp",
-  "protobuf",
-  "selectolax"
-]
+dependencies = ["primp", "protobuf", "selectolax"]
 
 [project.optional-dependencies]
-local = [
-    "playwright"
-]
+local = ["playwright"]
 
 [project.urls]
 "Source" = "https://github.com/AWeirdDev/flights"
@@ -35,6 +37,4 @@ local = [
 "Documentation" = "https://aweirddev.github.io/flights/"
 
 [tool.setuptools]
-packages = [
-    "fast_flights"
-]
+packages = ["fast_flights"]
