@@ -1,7 +1,7 @@
-from primp import Client  # type: ignore
+from primp import AsyncClient, Client  # type: ignore
 
 
 class Response: ...
 
 
-__all__ = ["Client", "Response"]
+__all__ = ["Client", "Response", "AsyncClient"]

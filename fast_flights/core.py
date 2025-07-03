@@ -7,15 +7,15 @@ from .extract_data import get_js_callback_data
 from .fallback_playwright import fallback_playwright_fetch
 from .filter import TFSData
 from .flights_impl import FlightData, Passengers
-from .primp import Client, Response
+from .primp import AsyncClient, Response
 from .schema import Flight, Result
 
 
-def fetch(params: dict) -> Response:
-    client = Client(impersonate="chrome_126", verify=False)
+async def fetch(params: dict) -> Response:
+    client = AsyncClient(impersonate="chrome_126", verify=False)
     # print out the url
     print(f"https://www.google.com/travel/flights?{urlencode(params)}")
-    res = client.get("https://www.google.com/travel/flights", params=params)
+    res = await client.get("https://www.google.com/travel/flights", params=params)
     # save res.text to file
     # with open("res.html", "w") as f:
     #     f.write(res.text)
@@ -23,7 +23,7 @@ def fetch(params: dict) -> Response:
     return res
 
 
-def get_flights_from_filter(
+async def get_flights_from_filter(
     filter: TFSData,
     currency: str = "",
     *,
@@ -40,7 +40,7 @@ def get_flights_from_filter(
 
     if mode in {"common", "fallback"}:
         try:
-            res = fetch(params)
+            res = await fetch(params)
         except AssertionError as e:
             if mode == "fallback":
                 res = fallback_playwright_fetch(params)
@@ -59,11 +59,11 @@ def get_flights_from_filter(
         return parse_response(res)
     except RuntimeError as e:
         if mode == "fallback":
-            return get_flights_from_filter(filter, mode="force-fallback")
+            return await get_flights_from_filter(filter, mode="force-fallback")
         raise e
 
 
-def get_flights(
+async def get_flights(
     *,
     flight_data: List[FlightData],
     trip: Literal["round-trip", "one-way", "multi-city"],
@@ -72,7 +72,7 @@ def get_flights(
     fetch_mode: Literal["common", "fallback", "force-fallback", "local"] = "common",
     max_stops: Optional[int] = None,
 ) -> Result:
-    return get_flights_from_filter(
+    return await get_flights_from_filter(
         TFSData.from_interface(
             flight_data=flight_data,
             trip=trip,
