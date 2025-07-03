@@ -102,7 +102,10 @@ def parse_response(
     parser = LexborHTMLParser(r.text)
     parsed_script = parser.css_first("script[class='ds:1']")
     raw_data = get_js_callback_data(parsed_script.text())
-    raw_data = raw_data[2][0] + raw_data[3][0]
+
+    raw_data = (raw_data[2][0] if raw_data[2] else []) + (
+        raw_data[3][0] if raw_data[3] else []
+    )
 
     flights = []
     flight_ids = set()
