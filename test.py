@@ -6,9 +6,9 @@ filter = create_filter(
     flight_data=[
         # Include more if it's not a one-way trip
         FlightData(
-            date="2025-07-20",  # Date of departure
-            from_airport="SIN",  # Departure (airport)
-            to_airport="CAN",  # Arrival (airport)
+            date="2025-08-01",  # Date of departure
+            from_airport="PVG",  # Departure (airport)
+            to_airport="SIN",  # Arrival (airport)
         )
     ],
     trip="one-way",  # Trip type
@@ -22,16 +22,19 @@ print(filter.as_b64().decode("utf-8"))
 
 
 async def main():
-    flights = await get_flights_from_filter(
+    result = await get_flights_from_filter(
         filter,
         mode="common",
         language="zh-CN",
         currency="CNY",
         sort_by="price",
-        gl="CN",
+        gl="US",
     )
-    for flight in flights.flights:
+    for flight in result.flights:
         print(flight)
+
+    print("number of flights:", len(result.flights))
+    print("has error:", result.has_error)
 
 
 asyncio.run(main())

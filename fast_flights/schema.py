@@ -8,6 +8,7 @@ from typing import List, Literal, Optional
 class Result:
     current_price: Literal["low", "typical", "high"]
     flights: List[Flight]
+    has_error: bool
 
 
 @dataclass

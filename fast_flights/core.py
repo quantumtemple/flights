@@ -125,6 +125,7 @@ def parse_response(
 
     flights = []
     flight_ids = set()
+    has_error = False
 
     for i, fl in enumerate(parser.css('div[jsname="IWWDBc"], div[jsname="YdtKid"]')):
         is_best_flight = i == 0
@@ -208,6 +209,11 @@ def parse_response(
             # except ValueError:
             #     stops_fmt = "Unknown"
 
+            # This checks if the price string contains any digits.
+            # If it doesn't, it means the price is missing or invalid, so we set has_error to True.
+            if not re.search(r"\d", price):
+                has_error = True
+
             flights.append(
                 {
                     "is_best": is_best_flight,
@@ -229,4 +235,8 @@ def parse_response(
     if not flights:
         raise RuntimeError("No flights found:\n{}".format(r.text_markdown))
 
-    return Result(current_price=current_price, flights=[Flight(**fl) for fl in flights])  # type: ignore
+    return Result(
+        current_price=current_price,
+        flights=[Flight(**fl) for fl in flights],
+        has_error=has_error,
+    )  # type: ignore
