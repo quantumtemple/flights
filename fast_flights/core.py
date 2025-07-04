@@ -1,4 +1,4 @@
-from typing import List, Literal, Optional
+from typing import Annotated, List, Literal, Optional
 from urllib.parse import urlencode
 
 from selectolax.lexbor import LexborHTMLParser, LexborNode
@@ -16,26 +16,42 @@ async def fetch(params: dict) -> Response:
     # print out the url
     print(f"https://www.google.com/travel/flights?{urlencode(params)}")
     res = await client.get("https://www.google.com/travel/flights", params=params)
+
     # save res.text to file
     # with open("res.html", "w") as f:
     #     f.write(res.text)
+
     assert res.status_code == 200, f"{res.status_code} Result: {res.text_markdown}"
     return res
 
 
 async def get_flights_from_filter(
     filter: TFSData,
-    currency: str = "",
+    currency: Annotated[str, "e.g. USD, CNY, HKD, GBP, EUR"] = "USD",
     *,
     mode: Literal["common", "fallback", "force-fallback", "local"] = "common",
+    language: Annotated[str, "e.g. en, zh-CN, es"] = "en",
+    sort_by: Literal[
+        "top_flights", "price", "departure_time", "arrival_time", "duration"
+    ] = "top_flights",
+    gl: Annotated[str, "e.g. US, CN, HK, GB, FR"] = "US",
 ) -> Result:
     data = filter.as_b64()
 
+    sort_by_map = {
+        "top_flights": "EggIARABIAIoByIA",
+        "price": "EggIAhABIAIoByIA",
+        "departure_time": "EggIAxABIAIoByIA",
+        "arrival_time": "EggIBBABIAIoByIA",
+        "duration": "EggIBRABIAIoByIA",
+    }
+
     params = {
         "tfs": data.decode("utf-8"),
-        "hl": "en",
-        "tfu": "EgQIABABIgA",
+        "hl": language,
+        "tfu": sort_by_map[sort_by],
         "curr": currency,
+        "gl": gl,
     }
 
     if mode in {"common", "fallback"}:
@@ -117,17 +133,20 @@ def parse_response(
             : (None if dangerously_allow_looping_last_item or i == 0 else -1)
         ]:
             data_id = item.css_first("div").attributes.get("data-id")
+            if data_id is None:
+                continue
             if data_id in flight_ids:
                 continue
             flight_ids.add(data_id)
 
             flight_no = []
+            aircraft_model = []
             for raw_data_row in raw_data:
                 if data_id in str(raw_data_row):
                     flights_info = raw_data_row[0][2]
                     for flight_info in flights_info:
                         flight_no.append(flight_info[22][0] + flight_info[22][1])
-
+                        aircraft_model.append(flight_info[17])
                     break
 
             # Flight name
@@ -160,24 +179,49 @@ def parse_response(
             # Get prices
             price = safe(item.css_first(".YMlIz.FpEdX")).text() or "0"
 
+            # get logo
+            logo_style = safe(item.css_first("div.EbY4Pc.P2UJoe")).attributes.get(
+                "style", ""
+            )
+            logo_default = None
+            logo_dark = None
+            if logo_style:
+                import re
+
+                match_default = re.search(
+                    r"--travel-primitives-themeable-image-default:\s*url\(([^)]+)\)",
+                    logo_style,
+                )
+                match_dark = re.search(
+                    r"--travel-primitives-themeable-image-dark:\s*url\(([^)]+)\)",
+                    logo_style,
+                )
+                if match_default:
+                    logo_default = match_default.group(1)
+                if match_dark:
+                    logo_dark = match_dark.group(1)
+            logo = {"default": logo_default, "dark": logo_dark}
+
             # Stops formatting
-            try:
-                stops_fmt = 0 if stops == "Nonstop" else int(stops.split(" ", 1)[0])
-            except ValueError:
-                stops_fmt = "Unknown"
+            # try:
+            #     stops_fmt = 0 if stops == "Nonstop" else int(stops.split(" ", 1)[0])
+            # except ValueError:
+            #     stops_fmt = "Unknown"
 
             flights.append(
                 {
                     "is_best": is_best_flight,
                     "name": name,
                     "flight_number": ", ".join(flight_no),
+                    "aircraft_model": ", ".join(aircraft_model),
                     "departure": " ".join(departure_time.split()),
                     "arrival": " ".join(arrival_time.split()),
                     "arrival_time_ahead": time_ahead,
                     "duration": duration,
-                    "stops": stops_fmt,
+                    "stops": stops,
                     "delay": delay,
-                    "price": price.replace(",", ""),
+                    "price": price,
+                    "logo": logo,
                 }
             )
 

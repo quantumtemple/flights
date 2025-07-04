@@ -15,6 +15,7 @@ class Flight:
     is_best: bool
     name: str
     flight_number: str
+    aircraft_model: str
     departure: str
     arrival: str
     arrival_time_ahead: str
@@ -22,3 +23,4 @@ class Flight:
     stops: int
     delay: Optional[str]
     price: str
+    logo: dict
